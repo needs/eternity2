@@ -1,6 +1,11 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"os"
+	"io"
+	"time"
+)
 
 type piece struct {
 	id int
@@ -24,9 +29,9 @@ type board struct {
 	cells [16][16]cell
 }
 
-func load_pieces(pieces []piece) {
+func load_pieces(r io.Reader, pieces []piece) {
 	for i := 0; i < len(pieces); i++ {
-		fmt.Scanf(
+		fmt.Fscanf(r,
 			"%d,%d,%d,%d,%d", &pieces[i].id,
 			&pieces[i].top, &pieces[i].right,
 			&pieces[i].bottom, &pieces[i].left)
@@ -35,10 +40,10 @@ func load_pieces(pieces []piece) {
 	}
 }
 
-func init_board(board *board) {
-	load_pieces(board.pieces[0:256])
+func init_board(r io.Reader, board *board) {
+	load_pieces(r, board.pieces[0:256])
 
-	// Link cell neightbors
+	// Link cell to neightbors
 	for i := 0; i < len(board.cells); i++ {
 		for j := 0; j < len(board.cells[i]); j++ {
 			board.cells[i][j].piece = nil
@@ -148,13 +153,28 @@ func print_board(board *board) {
 }
 
 func main() {
+	if len(os.Args) != 2 {
+		fmt.Fprintf(os.Stderr, "Usage: %s <pieces file>\n", os.Args[0])
+		os.Exit(1)
+	}
+
+	fd, err := os.Open(os.Args[1])
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error: %s\n", err);
+		os.Exit(2)
+	}
+
+	go StartViewer()
+
 	var board board
 
-	init_board(&board)
+	init_board(fd, &board)
 
 	if backtrack(&board, &board.cells[0][0]) {
 		print_board(&board)
 	} else {
 		fmt.Printf("No solutions found\n")
 	}
+
+	time.Sleep(10 * time.Second)
 }
