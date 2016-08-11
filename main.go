@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"io"
+	"time"
 )
 
 type piece struct {
@@ -49,5 +50,10 @@ func main() {
 		os.Exit(2)
 	}
 
+
+	go StartViewer()
+
 	print_pieces(load_pieces(fd))
+
+	time.Sleep(10 * time.Second)
 }
