@@ -1,6 +1,10 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"os"
+	"io"
+)
 
 type piece struct {
 	id int
@@ -11,11 +15,11 @@ type piece struct {
 	left int
 }
 
-func load_pieces() [256]piece {
+func load_pieces(r io.Reader) [256]piece {
 	var pieces [256]piece
 
 	for i := 0; i < 256; i++ {
-		fmt.Scanf(
+		fmt.Fscanf(r,
 			"%d,%d,%d,%d,%d", &pieces[i].id,
 			&pieces[i].top, &pieces[i].right,
 			&pieces[i].bottom, &pieces[i].left)
@@ -34,5 +38,16 @@ func print_pieces(pieces [256]piece) {
 }
 
 func main() {
-	print_pieces(load_pieces())
+	if len(os.Args) != 2 {
+		fmt.Fprintf(os.Stderr, "Usage: %s <pieces file>\n", os.Args[0])
+		os.Exit(1)
+	}
+
+	fd, err := os.Open(os.Args[1])
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error: %s\n", err);
+		os.Exit(2)
+	}
+
+	print_pieces(load_pieces(fd))
 }
