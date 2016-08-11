@@ -7,14 +7,20 @@ import (
 	"time"
 )
 
-type piece struct {
-	id int
-
+type sides struct {
 	top int
 	right int
 	bottom int
 	left int
+}
 
+type piece struct {
+	id int
+
+	// For every rotation
+	rots [4]sides
+
+	side *sides
 	cell *cell
 }
 
@@ -29,12 +35,32 @@ type board struct {
 	cells [16][16]cell
 }
 
+func rotate(side sides, rot int) sides {
+	ret := side
+
+	for i := 0; i < rot; i++ {
+		save := ret.top
+		ret.top = ret.left
+		ret.left = ret.bottom
+		ret.bottom = ret.right
+		ret.right = save
+	}
+
+	return ret
+}
+
 func load_pieces(r io.Reader, pieces []piece) {
 	for i := 0; i < len(pieces); i++ {
+		pieces[i].side = &pieces[i].rots[0]
+
 		fmt.Fscanf(r,
 			"%d,%d,%d,%d,%d", &pieces[i].id,
-			&pieces[i].top, &pieces[i].right,
-			&pieces[i].bottom, &pieces[i].left)
+			&pieces[i].side.top, &pieces[i].side.right,
+			&pieces[i].side.bottom, &pieces[i].side.left)
+
+		for rot := 0; rot < 4; rot++ {
+			pieces[i].rots[rot] = rotate(pieces[i].rots[0], rot)
+		}
 
 		pieces[i].cell = nil
 	}
@@ -88,14 +114,14 @@ func init_board(r io.Reader, board *board) {
 	}
 }
 
-func does_fit(piece *piece, cell *cell) bool {
-	if cell.top != nil && cell.top.piece != nil && cell.top.piece.bottom != piece.top {
+func does_fit(side sides, cell *cell) bool {
+	if cell.top != nil && cell.top.piece != nil && cell.top.piece.side.bottom != side.top {
 		return false
-	} else if cell.bottom != nil && cell.bottom.piece != nil && cell.bottom.piece.top != piece.bottom {
+	} else if cell.bottom != nil && cell.bottom.piece != nil && cell.bottom.piece.side.top != side.bottom {
 		return false
-	} else if cell.left != nil && cell.left.piece != nil && cell.left.piece.right != piece.left {
+	} else if cell.left != nil && cell.left.piece != nil && cell.left.piece.side.right != side.left {
 		return false
-	} else if cell.right != nil && cell.right.piece != nil && cell.right.piece.left != piece.right {
+	} else if cell.right != nil && cell.right.piece != nil && cell.right.piece.side.left != side.right {
 		return false
 	}
 
@@ -120,18 +146,21 @@ func backtrack(board *board, cell *cell) bool {
 
 	for i := 0; i < len(board.pieces); i++ {
 		if board.pieces[i].cell == nil {
-			if does_fit(&board.pieces[i], cell) {
-				board.pieces[i].cell = cell
-				cell.piece = &board.pieces[i]
+			for rot := 0; rot < 4; rot++ {
+				if does_fit(board.pieces[i].rots[rot], cell) {
+					board.pieces[i].cell = cell
+					board.pieces[i].side = &board.pieces[i].rots[rot]
+					cell.piece = &board.pieces[i]
 
-				depth++
-				if backtrack(board, cell.next) {
-					return true
+					depth++
+					if backtrack(board, cell.next) {
+						return true
+					}
+					depth--
+
+					board.pieces[i].cell = nil
+					cell.piece = nil
 				}
-				depth--
-
-				board.pieces[i].cell = nil
-				cell.piece = nil
 			}
 		}
 	}
