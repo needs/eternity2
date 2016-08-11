@@ -11,7 +11,7 @@ type piece struct {
 	left int
 }
 
-func load_pieces() {
+func load_pieces() [256]piece {
 	var pieces [256]piece
 
 	for i := 0; i < 256; i++ {
@@ -21,6 +21,10 @@ func load_pieces() {
 			&pieces[i].bottom, &pieces[i].left)
 	}
 
+	return pieces
+}
+
+func print_pieces(pieces [256]piece) {
 	for i := 0; i < 256; i++ {
 		fmt.Printf(
 			"%3d: %2d %2d %2d %2d\n", pieces[i].id,
@@ -30,5 +34,5 @@ func load_pieces() {
 }
 
 func main() {
-	load_pieces()
+	print_pieces(load_pieces())
 }
