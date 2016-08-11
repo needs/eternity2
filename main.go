@@ -115,13 +115,13 @@ func init_board(r io.Reader, board *board) {
 }
 
 func does_fit(side sides, cell *cell) bool {
-	if cell.top != nil && cell.top.piece != nil && cell.top.piece.side.bottom != side.top {
+	if (cell.top == nil && side.top != 0) || (cell.top != nil && cell.top.piece != nil && cell.top.piece.side.bottom != side.top) {
 		return false
-	} else if cell.bottom != nil && cell.bottom.piece != nil && cell.bottom.piece.side.top != side.bottom {
+	} else if (cell.bottom == nil && side.bottom != 0) || (cell.bottom != nil && cell.bottom.piece != nil && cell.bottom.piece.side.top != side.bottom) {
 		return false
-	} else if cell.left != nil && cell.left.piece != nil && cell.left.piece.side.right != side.left {
+	} else if (cell.left == nil && side.left != 0) || (cell.left != nil && cell.left.piece != nil && cell.left.piece.side.right != side.left) {
 		return false
-	} else if cell.right != nil && cell.right.piece != nil && cell.right.piece.side.left != side.right {
+	} else if (cell.right == nil && side.right != 0) || (cell.right != nil && cell.right.piece != nil && cell.right.piece.side.left != side.right) {
 		return false
 	}
 
